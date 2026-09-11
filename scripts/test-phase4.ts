@@ -461,7 +461,7 @@ async function runPhase4Tests() {
     assert(sepoliaUrl.includes('sepolia.etherscan.io/tx/'), 'Explorer link helper formats Sepolia correctly');
 
     const localUrl = getExplorerTxUrl(31337, testTxHash);
-    assert(localUrl.includes('127.0.0.1:8545/tx/'), 'Explorer link helper formats Localhost correctly');
+    assert(localUrl.includes('/explorer/tx/'), 'Explorer link helper formats in-app explorer correctly');
 
     // 2. Verify private key is never returned in API payloads or user objects
     const queryUsers = await query('SELECT * FROM users WHERE id = $1', [ngoAdmin.id]);

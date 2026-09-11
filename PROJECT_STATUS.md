@@ -99,6 +99,7 @@ Next.js Production Build (npm run build):          COMPILED (20/20 PAGES)
 - **`/donor/donations/:id`**: Official contribution receipt with transaction hashes and reference numbers.
 - **`/donor/donations/:id/trace`**: **"Trace My Donation" Journey** answering *"Where did my money go?"* with an 8-stage visual progression and milestone breakdown.
 - **`/ngos/:id`**: Public NGO Profile displaying the organization's **Deterministic Reputation Score (0–100)**, letter grade (A+, A, B, C, D), factor breakdown, verified performance metrics, and public campaigns portfolio.
+- **`/explorer/tx/:hash`**: **In-App VERA Block Explorer** providing a native, beautiful transaction receipt interface on local testnet without raw JSON-RPC errors. Shows confirmation status, block height, timestamp, sender, contract address, transacted value, gas used, synchronized VERA campaign audit metadata, and raw JSON-RPC state payload.
 
 ### Role-Protected Management Portals
 - **`/ngo/campaigns`**: NGO management hub for creating campaigns and configuring milestone sequences.

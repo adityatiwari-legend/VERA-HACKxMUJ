@@ -88,7 +88,7 @@ contract VERA {
 | **Ethereum Sepolia Testnet** | `11155111` | `https://sepolia.etherscan.io/tx/{hash}` | Infura / Alchemy |
 | **Ethereum Holesky Testnet** | `17000` | `https://holesky.etherscan.io/tx/{hash}` | Public RPC |
 | **Polygon Amoy Testnet** | `80002` | `https://amoy.polygonscan.com/tx/{hash}` | Polygon RPC |
-| **Hardhat Local Testnet** | `31337` | `http://127.0.0.1:8545/tx/{hash}` | Local Node |
+| **Hardhat Local Testnet** | `31337` | `/explorer/tx/{hash}` (In-App VERA Explorer) | Local Node |
 
 ### Explorer URL Helper (`lib/blockchain.ts`):
 ```typescript

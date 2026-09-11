@@ -221,7 +221,7 @@ async function runPhase5Tests() {
 
     // Local Testnet (Chain ID 31337)
     const localUrl = getExplorerTxUrl(31337, sampleTxHash);
-    assert(localUrl.includes('8545/tx/'), 'getExplorerTxUrl maps local Hardhat testnet (31337) correctly');
+    assert(localUrl.includes('/explorer/tx/'), 'getExplorerTxUrl maps local Hardhat testnet (31337) to in-app explorer correctly');
 
     // Empty Tx hash returns safe fallback
     const emptyUrl = getExplorerTxUrl(11155111, '');

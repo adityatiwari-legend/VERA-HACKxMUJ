@@ -83,7 +83,7 @@ export function getExplorerTxUrl(chainId: number | string | undefined, txHash: s
       return `https://amoy.polygonscan.com/tx/${txHash}`;
     case 31337:
     case 1337:
-      return `http://127.0.0.1:8545/tx/${txHash}`;
+      return `/explorer/tx/${txHash}`;
     default:
       return `https://sepolia.etherscan.io/tx/${txHash}`;
   }
