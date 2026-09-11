@@ -15,6 +15,62 @@ const VALID_STATUS_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
   CANCELLED: [],
 };
 
+import {
+  isBlockchainConfigured,
+  onChainCreateCampaign,
+  idToBytes32,
+  getExplorerTxUrl,
+  getNetworkName,
+} from './blockchain';
+import { getCampaignFinancialSummary } from './fund_transactions';
+
+/**
+ * Register a campaign on-chain if not already registered (supports retries)
+ */
+export async function registerCampaignOnChain(campaignId: string): Promise<{
+  success: boolean;
+  txHash?: string;
+  blockchainCampaignId?: string;
+  error?: string;
+}> {
+  if (!isBlockchainConfigured()) {
+    return { success: false, error: 'Blockchain is not configured' };
+  }
+
+  const campRes = await query<Campaign>(`SELECT * FROM campaigns WHERE id = $1`, [campaignId]);
+  if (campRes.rowCount === 0) return { success: false, error: 'Campaign not found' };
+  const campaign = campRes.rows[0];
+
+  const onChainRes = await onChainCreateCampaign({
+    campaignId: campaign.id,
+    targetAmount: Number(campaign.target_amount),
+  });
+
+  const b32Id = idToBytes32(campaign.id);
+  const network = process.env.BLOCKCHAIN_NETWORK || 'Hardhat Local / Sepolia Testnet';
+  const contractAddr = process.env.CONTRACT_ADDRESS || null;
+
+  if (onChainRes.success) {
+    await query(
+      `UPDATE campaigns 
+       SET blockchain_campaign_id = $1, 
+           blockchain_network = $2, 
+           blockchain_contract_address = $3, 
+           blockchain_status = 'CONFIRMED', 
+           updated_at = NOW() 
+       WHERE id = $4`,
+      [b32Id, network, contractAddr, campaign.id]
+    );
+    return { success: true, txHash: onChainRes.txHash, blockchainCampaignId: b32Id };
+  } else {
+    await query(
+      `UPDATE campaigns SET blockchain_status = 'FAILED', updated_at = NOW() WHERE id = $1`,
+      [campaign.id]
+    );
+    return { success: false, error: onChainRes.error };
+  }
+}
+
 /**
  * Create a new campaign under the authenticated NGO
  */
@@ -22,7 +78,7 @@ export async function createCampaign(
   ngoId: string,
   input: CreateCampaignInput
 ): Promise<Campaign> {
-  return withTransaction(async (client) => {
+  const campaign = await withTransaction(async (client) => {
     const insertSql = `
       INSERT INTO campaigns (
         ngo_id,
@@ -32,9 +88,10 @@ export async function createCampaign(
         raised_amount,
         released_amount,
         beneficiary,
-        status
+        status,
+        blockchain_status
       )
-      VALUES ($1, $2, $3, $4, 0.00, 0.00, $5, $6)
+      VALUES ($1, $2, $3, $4, 0.00, 0.00, $5, $6, 'PENDING')
       RETURNING *
     `;
 
@@ -48,26 +105,39 @@ export async function createCampaign(
       initialStatus,
     ]);
 
-    const campaign = res.rows[0];
+    const camp = res.rows[0];
 
     // Record audit log
     await recordAuditLog({
-      campaignId: campaign.id,
+      campaignId: camp.id,
       actorId: ngoId,
       action: 'CREATE_CAMPAIGN',
       entityType: 'CAMPAIGN',
-      entityId: campaign.id,
+      entityId: camp.id,
       metadata: {
-        title: campaign.title,
-        target_amount: campaign.target_amount,
-        beneficiary: campaign.beneficiary,
-        status: campaign.status,
+        title: camp.title,
+        target_amount: camp.target_amount,
+        beneficiary: camp.beneficiary,
+        status: camp.status,
       },
       client,
     });
 
-    return campaign;
+    return camp;
   });
+
+  // Attempt on-chain creation if configured
+  if (isBlockchainConfigured()) {
+    try {
+      await registerCampaignOnChain(campaign.id);
+      const refreshed = await getCampaignById(campaign.id);
+      if (refreshed) return refreshed;
+    } catch (bcErr) {
+      console.error('[createCampaign] On-chain registration failed:', bcErr);
+    }
+  }
+
+  return campaign;
 }
 
 /**
@@ -86,6 +156,9 @@ export async function getCampaignsForNgo(ngoId: string): Promise<Campaign[]> {
       beneficiary,
       status,
       blockchain_campaign_id,
+      blockchain_network,
+      blockchain_contract_address,
+      blockchain_status,
       created_at,
       updated_at
     FROM campaigns
@@ -113,6 +186,9 @@ export async function getCampaignById(id: string): Promise<Campaign | null> {
       c.beneficiary,
       c.status,
       c.blockchain_campaign_id,
+      c.blockchain_network,
+      c.blockchain_contract_address,
+      c.blockchain_status,
       c.created_at,
       c.updated_at,
       u.name as ngo_name,
@@ -306,3 +382,216 @@ export async function getNgoCampaignStats(ngoId: string) {
 
   return res.rows[0];
 }
+
+export interface CampaignAuditMilestone {
+  id: string;
+  sequence: number;
+  title: string;
+  description: string;
+  allocatedAmount: number;
+  releasedAmount: number;
+  status: string;
+  proofStatus: string;
+  proofCount: number;
+  verificationStatus: string;
+  claimedAmount?: number;
+  detectedAmount?: number;
+  discrepancyAmount?: number;
+  approvalStatus: string;
+  releaseStatus: string;
+  blockchainTxHash?: string;
+  blockchainStatus?: string;
+}
+
+export interface CampaignAuditDetails {
+  campaign: Campaign & { ngo_name: string };
+  ngo: { id: string; name: string };
+  financialSummary: {
+    targetAmount: number;
+    raisedAmount: number;
+    lockedAmount: number;
+    releasedAmount: number;
+    refundedAmount: number;
+    remainingAmount: number;
+    remainingBalance: number;
+    progressPercent: number;
+    milestonesTotal: number;
+    milestonesCount: number;
+    donorsCount: number;
+    donationsCount: number;
+  };
+  milestones: CampaignAuditMilestone[];
+  blockchain: {
+    contractAddress: string | null;
+    network: string;
+    chainId: number | string;
+    campaignOnChainId?: string | null;
+    transactions: Array<{
+      type: string;
+      label: string;
+      txHash: string;
+      explorerUrl: string;
+      amount?: number;
+      timestamp: string;
+    }>;
+  };
+  trustIndicators: {
+    fundsEarmarked: boolean;
+    milestonesDefined: boolean;
+    proofSubmitted: boolean;
+    evidenceVerified: boolean;
+    blockchainRecorded: boolean;
+    multisigEnabled: boolean;
+    score: number;
+  };
+}
+
+/**
+ * Get comprehensive public audit details for a campaign without exposing private files or credentials
+ */
+export async function getCampaignAuditDetails(
+  campaignId: string
+): Promise<CampaignAuditDetails | null> {
+  const campSql = `
+    SELECT c.*, u.name as ngo_name, u.id as ngo_id
+    FROM campaigns c
+    JOIN users u ON c.ngo_id = u.id
+    WHERE c.id = $1
+  `;
+  const campRes = await query<Campaign & { ngo_name: string; ngo_id: string }>(campSql, [campaignId]);
+  if (campRes.rowCount === 0) return null;
+  const campaign = campRes.rows[0];
+
+  const financialSummary = await getCampaignFinancialSummary(campaignId);
+  if (!financialSummary) return null;
+
+  // Query milestones with proof and verification summary
+  const msSql = `
+    SELECT 
+      m.id,
+      m.sequence,
+      m.title,
+      m.description,
+      m.amount::numeric as allocated_amount,
+      COALESCE(m.released_amount, 0)::numeric as released_amount,
+      m.status,
+      m.blockchain_status,
+      p.id as proof_id,
+      COALESCE(p.status, 'AWAITING_PROOF') as proof_status,
+      p.claimed_amount::numeric as claimed_amount,
+      COUNT(pf.id)::int as proof_files_count,
+      COALESCE(v.ai_status, 'NOT_VERIFIED') as verification_status,
+      v.extracted_amount::numeric as detected_amount,
+      COALESCE(v.discrepancy_amount, 0)::numeric as discrepancy_amount,
+      COALESCE(rr.status, 'AWAITING_REQUEST') as release_status,
+      rr.blockchain_tx_hash as release_tx_hash
+    FROM milestones m
+    LEFT JOIN LATERAL (
+      SELECT id, status, claimed_amount 
+      FROM proofs 
+      WHERE milestone_id = m.id 
+      ORDER BY submitted_at DESC 
+      LIMIT 1
+    ) p ON true
+    LEFT JOIN proof_files pf ON p.id = pf.proof_id
+    LEFT JOIN verification_results v ON p.id = v.proof_id
+    LEFT JOIN LATERAL (
+      SELECT status, blockchain_tx_hash 
+      FROM release_requests 
+      WHERE milestone_id = m.id 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    ) rr ON true
+    WHERE m.campaign_id = $1
+    GROUP BY m.id, p.id, p.status, p.claimed_amount, v.ai_status, v.extracted_amount, v.discrepancy_amount, rr.status, rr.blockchain_tx_hash
+    ORDER BY m.sequence ASC
+  `;
+  const msRes = await query<any>(msSql, [campaignId]);
+
+  const milestones: CampaignAuditMilestone[] = msRes.rows.map((row) => ({
+    id: row.id,
+    sequence: row.sequence,
+    title: row.title,
+    description: row.description,
+    allocatedAmount: Number(row.allocated_amount),
+    releasedAmount: Number(row.released_amount),
+    status: row.status,
+    proofStatus: row.proof_status,
+    proofCount: row.proof_files_count || 0,
+    verificationStatus: row.verification_status,
+    claimedAmount: row.claimed_amount ? Number(row.claimed_amount) : undefined,
+    detectedAmount: row.detected_amount ? Number(row.detected_amount) : undefined,
+    discrepancyAmount: row.discrepancy_amount ? Number(row.discrepancy_amount) : 0,
+    approvalStatus: row.status === 'APPROVED' || row.status === 'RELEASED' ? 'APPROVED' : row.status === 'REJECTED' ? 'REJECTED' : 'PENDING',
+    releaseStatus: row.release_status,
+    blockchainTxHash: row.release_tx_hash,
+    blockchainStatus: row.blockchain_status,
+  }));
+
+  // Fetch verified on-chain transactions
+  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID || 31337;
+  const txSql = `
+    SELECT 
+      type, 
+      reference, 
+      amount::numeric as amount, 
+      COALESCE(blockchain_tx_hash, transaction_hash) as tx_hash, 
+      created_at 
+    FROM fund_transactions 
+    WHERE campaign_id = $1 AND (blockchain_tx_hash IS NOT NULL OR transaction_hash IS NOT NULL)
+    ORDER BY created_at ASC
+  `;
+  const txRes = await query<any>(txSql, [campaignId]);
+
+  const transactions = txRes.rows
+    .filter((r) => Boolean(r.tx_hash))
+    .map((r) => ({
+      type: r.type,
+      label: r.type === 'DONATION' ? 'Donation Confirmed' : r.type === 'RELEASE' ? 'Fund Release' : r.type === 'REFUND' ? 'Donor Refund' : 'Escrow Action',
+      txHash: r.tx_hash,
+      explorerUrl: getExplorerTxUrl(chainId, r.tx_hash),
+      amount: Number(r.amount),
+      timestamp: r.created_at,
+    }));
+
+  // Trust Indicators
+  const fundsEarmarked = financialSummary.raisedAmount > 0;
+  const milestonesDefined = milestones.length > 0;
+  const proofSubmitted = milestones.some((m) => m.proofStatus !== 'AWAITING_PROOF');
+  const evidenceVerified = milestones.some((m) => m.approvalStatus === 'APPROVED');
+  const blockchainRecorded = transactions.length > 0 || Boolean(campaign.blockchain_campaign_id);
+  const multisigEnabled = true;
+
+  const trustScore = [
+    fundsEarmarked,
+    milestonesDefined,
+    proofSubmitted,
+    evidenceVerified,
+    blockchainRecorded,
+    multisigEnabled,
+  ].filter(Boolean).length;
+
+  return {
+    campaign,
+    ngo: { id: campaign.ngo_id, name: campaign.ngo_name },
+    financialSummary,
+    milestones,
+    blockchain: {
+      contractAddress: process.env.CONTRACT_ADDRESS || null,
+      network: getNetworkName(chainId),
+      chainId,
+      campaignOnChainId: campaign.blockchain_campaign_id,
+      transactions,
+    },
+    trustIndicators: {
+      fundsEarmarked,
+      milestonesDefined,
+      proofSubmitted,
+      evidenceVerified,
+      blockchainRecorded,
+      multisigEnabled,
+      score: trustScore,
+    },
+  };
+}
+

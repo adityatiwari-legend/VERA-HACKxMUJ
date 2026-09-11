@@ -49,9 +49,9 @@ export default function RegisterPage() {
           <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Join VERA</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Register your NGO to publish and manage transparent campaigns
+            Register as a donor or NGO to engage in auditable philanthropy
           </p>
         </div>
 

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShieldCheck, LogOut, LayoutDashboard, PlusCircle, UserCheck } from 'lucide-react';
+import { ShieldCheck, LogOut, LayoutDashboard, PlusCircle, Compass, HeartHandshake } from 'lucide-react';
 import { User } from '@/types';
 
 export const Navbar: React.FC = () => {
@@ -41,41 +41,82 @@ export const Navbar: React.FC = () => {
     <nav className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand Logo & Tag */}
+          {/* Brand Logo & Phase Badge */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:text-emerald-400 transition-colors">
+            <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight hover:text-emerald-400 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <span>Fund<span className="text-emerald-400">Trail</span></span>
+              <span>VERA</span>
             </Link>
 
             <span className="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800/80">
-              Phase 1: Foundation
+              Phase 5: Public Audit & Integrity
             </span>
           </div>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Always accessible link to browse campaigns */}
+            <Link
+              href="/campaigns"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                pathname.startsWith('/campaigns')
+                  ? 'bg-slate-800 text-emerald-400'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span className="hidden xs:inline">Browse</span> Campaigns
+            </Link>
+
             {user ? (
               <>
+                {(user.role === 'AUDITOR' || user.role === 'ADMIN') && (
+                  <Link
+                    href="/auditor/dashboard"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                      pathname.startsWith('/auditor')
+                        ? 'bg-indigo-900/60 text-indigo-300 border border-indigo-700/60'
+                        : 'text-indigo-200 hover:text-white hover:bg-indigo-900/40'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                    Auditor Hub
+                  </Link>
+                )}
+
+                {user.role === 'DONOR' && (
+                  <Link
+                    href="/donor/donations"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                      pathname.startsWith('/donor/donations')
+                        ? 'bg-slate-800 text-emerald-400'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <HeartHandshake className="w-4 h-4" />
+                    My Donations
+                  </Link>
+                )}
+
                 {user.role === 'NGO' && (
                   <>
                     <Link
                       href="/ngo/campaigns"
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                         pathname.startsWith('/ngo/campaigns') && pathname !== '/ngo/campaigns/new'
                           ? 'bg-slate-800 text-white'
                           : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                       }`}
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
+                      NGO Hub
                     </Link>
 
                     <Link
                       href="/ngo/campaigns/new"
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                         pathname === '/ngo/campaigns/new'
                           ? 'bg-emerald-600 text-white'
                           : 'bg-emerald-600/90 text-white hover:bg-emerald-600'
@@ -93,7 +134,7 @@ export const Navbar: React.FC = () => {
                     <p className="text-xs font-semibold text-white leading-none">{user.name}</p>
                     <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{user.email}</p>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-emerald-400 border border-slate-700">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-emerald-400 border border-slate-700">
                     {user.role}
                   </span>
                 </div>
@@ -108,18 +149,18 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               !loading && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <Link
                     href="/login"
-                    className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                   >
                     Sign In
                   </Link>
                   <Link
                     href="/register"
-                    className="px-3.5 py-1.5 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors shadow-sm"
+                    className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors shadow-sm"
                   >
-                    Register NGO
+                    Join VERA
                   </Link>
                 </div>
               )

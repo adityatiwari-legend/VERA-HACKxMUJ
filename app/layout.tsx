@@ -3,7 +3,7 @@ import './globals.css';
 import { Navbar } from '@/components/Navbar';
 
 export const metadata: Metadata = {
-  title: 'FundTrail — Transparent Donation & Milestone Auditing',
+  title: 'VERA — Transparent Donation & Milestone Auditing',
   description: 'A donation trail donors can audit from release to beneficiary spend.',
 };
 
@@ -21,7 +21,7 @@ export default function RootLayout({
         </main>
         <footer className="border-t border-slate-200 bg-white py-6">
           <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            FundTrail Platform • Phase 1: Application Foundation & Campaign Management • Direct PostgreSQL Architecture
+            VERA Platform • Phase 2: Donation & Fund Lifecycle • Verifiable Evidence & Real Auditing
           </div>
         </footer>
       </body>

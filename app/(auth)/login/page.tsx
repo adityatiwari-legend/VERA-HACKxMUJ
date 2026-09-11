@@ -51,9 +51,9 @@ export default function LoginPage() {
           <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Sign in to FundTrail</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Sign in to VERA</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Access your NGO dashboard or audit controls
+            Access your donor portal, NGO hub, or audit controls
           </p>
         </div>
 
