@@ -11,7 +11,7 @@ services:
       # Mapped to host port 5433 for local host development/testing
       - "5433:5432"
     volumes:
-      - vera_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d vera"]
       interval: 5s
@@ -27,6 +27,8 @@ services:
     depends_on:
       vera-db:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       DATABASE_URL: postgresql://postgres:postgrespassword@vera-db:5432/vera
       JWT_SECRET: vera-super-secret-jwt-key-for-development-32chars!
@@ -34,6 +36,9 @@ services:
       PORT: 3000
       STORAGE_PATH: /app/storage
       MAX_UPLOAD_SIZE_MB: 50
+      CONTRACT_ADDRESS: "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+      BLOCKCHAIN_RPC_URL: "http://host.docker.internal:8545"
+      NEXT_PUBLIC_CHAIN_ID: "31337"
     ports:
       - "3000:3000"
     volumes:
@@ -54,8 +59,9 @@ services:
       - certbot_var:/var/www/certbot
 
 volumes:
-  vera_postgres_data:
-    driver: local
+  postgres_data:
+    name: hackxxmuj_postgres_data
+    external: true
   vera_storage:
     driver: local
   certbot_etc:
