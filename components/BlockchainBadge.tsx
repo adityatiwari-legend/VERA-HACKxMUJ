@@ -26,15 +26,15 @@ export const BlockchainBadge: React.FC<BlockchainBadgeProps> = ({
   const getStatusColor = () => {
     switch (currentStatus) {
       case 'CONFIRMED':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-[#00F59B]/10 text-[#00F59B] border-[#00F59B]/30';
       case 'SUBMITTED':
       case 'PENDING':
-        return 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse';
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse';
       case 'FAILED':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
       case 'NOT_SUBMITTED':
       default:
-        return 'bg-slate-50 text-slate-600 border-slate-200';
+        return 'bg-white/5 text-zinc-400 border-white/10';
     }
   };
 
@@ -59,18 +59,18 @@ export const BlockchainBadge: React.FC<BlockchainBadgeProps> = ({
 
   return (
     <div className={`inline-flex flex-wrap items-center gap-2 ${className}`}>
-      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${getStatusColor()}`}>
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border ${getStatusColor()}`}>
         {getStatusLabel()}
       </span>
 
       {network && (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-mono font-medium bg-[#6366F1]/10 text-[#818cf8] border border-[#6366F1]/30">
           Network: {network}
         </span>
       )}
 
       {txHash && (
-        <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+        <span className="text-xs font-mono bg-white/[0.04] text-zinc-300 px-2 py-0.5 rounded-lg border border-white/10">
           Tx: {truncatedHash}
         </span>
       )}
@@ -80,9 +80,9 @@ export const BlockchainBadge: React.FC<BlockchainBadgeProps> = ({
           href={explorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-xs text-[#06B6D4] hover:text-[#06B6D4]/80 underline flex items-center gap-1 font-mono transition-colors"
         >
-          View on Explorer →
+          View on Explorer ↗
         </a>
       )}
     </div>

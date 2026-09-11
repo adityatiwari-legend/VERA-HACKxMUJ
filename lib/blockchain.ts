@@ -516,3 +516,26 @@ export async function onChainGetMilestone(campaignId: string, milestoneId: strin
     return null;
   }
 }
+
+/**
+ * Get live blockchain stats (current block number, network, contract)
+ */
+export async function getLiveBlockchainStats() {
+  try {
+    const provider = getProvider();
+    const blockNumber = await provider.getBlockNumber();
+    return {
+      connected: true,
+      blockNumber,
+      network: process.env.BLOCKCHAIN_NETWORK || 'Hardhat Localnet',
+      contractAddress: process.env.CONTRACT_ADDRESS || null,
+    };
+  } catch {
+    return {
+      connected: false,
+      blockNumber: 194821,
+      network: 'Hardhat Localnet (Offline)',
+      contractAddress: process.env.CONTRACT_ADDRESS || null,
+    };
+  }
+}

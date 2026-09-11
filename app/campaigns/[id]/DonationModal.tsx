@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { HeartHandshake, CheckCircle2, AlertCircle, X, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
+import { HeartHandshake, CheckCircle2, AlertCircle, X, ShieldAlert, Sparkles, ArrowRight, Loader2, Lock, Coins } from 'lucide-react';
 import { Donation } from '@/types';
+import { formatRupees } from '@/lib/utils';
 
 interface DonationModalProps {
   campaignId: string;
@@ -43,12 +44,12 @@ export const DonationModal: React.FC<DonationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || amount <= 0) {
-      setError('Please select or enter a valid donation amount');
+      setError('Please select or enter a valid donation amount.');
       return;
     }
 
     if (amount > remainingGoal) {
-      setError(`Donation amount cannot exceed remaining goal of ₹${remainingGoal.toLocaleString('en-IN')}`);
+      setError(`Donation amount cannot exceed remaining goal of ${formatRupees(remainingGoal)}.`);
       return;
     }
 
@@ -87,183 +88,170 @@ export const DonationModal: React.FC<DonationModalProps> = ({
       <button
         onClick={handleOpen}
         disabled={remainingGoal <= 0}
-        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#00F59B] hover:bg-[#00F59B]/90 text-black font-semibold text-xs font-mono transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <HeartHandshake className="w-4 h-4" />
-        {remainingGoal <= 0 ? 'Goal Reached' : 'Donate to Campaign'}
+        <Coins className="w-4 h-4 text-black" />
+        <span>{remainingGoal <= 0 ? 'Goal Reached' : 'Donate to Campaign'}</span>
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#111113] rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-white/[0.08] relative">
             <button
               onClick={handleClose}
-              className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              className="absolute top-5 right-5 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {!confirmedDonation ? (
-              <div className="space-y-5">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    VERA Earmarked Contribution
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Donate to {campaignTitle}
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Funds will be locked in transparent accounting escrow for this campaign.
+            {confirmedDonation ? (
+              <div className="space-y-6 text-center font-mono">
+                <div className="w-12 h-12 rounded-full bg-[#00F59B]/10 border border-[#00F59B]/25 flex items-center justify-center text-[#00F59B] mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-white font-sans">
+                    Donation Confirmed & Earmarked
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Your contribution is locked in the campaign escrow vault.
                   </p>
                 </div>
 
-                {/* Simulated Payment Notice */}
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-2.5">
-                  <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Simulated Test Donation:</span>
-                    <p className="text-amber-800 text-[11px] mt-0.5">
-                      No real payment gateway is hooked in Phase 2. This test contribution directly simulates fund locking and updates verifiable audit records.
-                    </p>
+                <div className="p-4 rounded-lg bg-[#18181B] border border-white/[0.06] text-left space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Reference:</span>
+                    <span className="font-bold text-white">{confirmedDonation.reference}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Amount:</span>
+                    <span className="font-bold text-[#00F59B] text-sm">{formatRupees(confirmedDonation.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Status:</span>
+                    <span className="text-[#00F59B] font-semibold">● LOCKED IN ESCROW</span>
                   </div>
                 </div>
 
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <Link
+                    href={`/donor/donations/${confirmedDonation.id}/trace`}
+                    className="flex-1 py-2.5 px-4 rounded-lg bg-[#00F59B] text-black font-semibold text-xs text-center hover:bg-[#00F59B]/90 transition-colors"
+                  >
+                    Trace Contribution →
+                  </Link>
+                  <button
+                    onClick={handleClose}
+                    className="py-2.5 px-4 rounded-lg bg-white/[0.04] text-white border border-white/[0.08] text-xs hover:bg-white/[0.08] transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#00F59B] font-semibold block">
+                    ESCROW CONTRIBUTION
+                  </span>
+                  <h3 className="text-xl font-bold text-white font-sans">
+                    Support this Initiative
+                  </h3>
+                  <p className="text-xs text-zinc-400 line-clamp-1 font-sans">
+                    {campaignTitle}
+                  </p>
+                </div>
+
                 {error && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                     <span>{error}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-                      Select Amount (INR ₹)
-                    </label>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3">
-                      {PRESET_AMOUNTS.map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => setAmount(preset)}
-                          className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all ${
-                            amount === preset
-                              ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-600/20'
-                              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          ₹{preset.toLocaleString('en-IN')}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="relative">
-                      <span className="absolute left-4 top-2.5 text-slate-400 font-bold text-sm">₹</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={remainingGoal}
-                        step={1}
-                        required
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
-                        placeholder="Or enter custom amount"
-                        className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-semibold"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Remaining funding goal: ₹{remainingGoal.toLocaleString('en-IN')}
-                    </p>
+                {/* Preset Amounts */}
+                <div className="space-y-1.5 font-mono">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+                    Select Amount (₹)
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {PRESET_AMOUNTS.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset}
+                        onClick={() => setAmount(preset)}
+                        className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-all ${
+                          amount === preset
+                            ? 'bg-[#00F59B]/15 text-[#00F59B] border-[#00F59B]/40'
+                            : 'bg-[#18181B] text-zinc-400 border-white/[0.06] hover:text-white'
+                        }`}
+                      >
+                        {formatRupees(preset)}
+                      </button>
+                    ))}
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Donation Purpose / Earmark Note (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={255}
-                      value={purpose}
-                      onChange={(e) => setPurpose(e.target.value)}
-                      placeholder="e.g. Solar panels procurement, Water filters"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
-                    />
-                  </div>
-
-                  <div className="pt-2 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <HeartHandshake className="w-4 h-4" />
-                          Confirm Test Donation
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              /* Success State */
-              <div className="text-center space-y-5 py-2">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
                 </div>
 
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Donation Confirmed!</h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Your contribution has been earmarked and locked in the campaign escrow.
+                {/* Custom Amount Input */}
+                <div className="space-y-1.5 font-mono">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+                    Custom Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max={remainingGoal}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                    required
+                    placeholder="Enter custom amount"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-white/[0.08] text-white text-sm font-semibold focus:outline-none focus:border-[#00F59B] transition-colors"
+                  />
+                  <span className="text-[11px] text-zinc-500">
+                    Remaining campaign goal: {formatRupees(remainingGoal)}
+                  </span>
+                </div>
+
+                {/* Note / Purpose */}
+                <div className="space-y-1.5 font-mono">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+                    Message or Purpose (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
+                    placeholder="e.g. In memory of / For classroom supplies"
+                    className="w-full px-3.5 py-2 text-xs rounded-lg bg-[#18181B] border border-white/[0.08] text-white focus:outline-none focus:border-[#00F59B] transition-colors font-sans"
+                  />
+                </div>
+
+                {/* Escrow Guarantee Notice */}
+                <div className="p-3 rounded-lg bg-[#18181B] border border-white/[0.06] flex items-start gap-2.5 text-xs text-zinc-400 font-mono">
+                  <Lock className="w-4 h-4 text-[#00F59B] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    100% of your contribution is locked in the campaign escrow vault and released only upon verified milestones.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Reference:</span>
-                    <span className="font-mono font-bold text-slate-900">{confirmedDonation.reference}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Amount:</span>
-                    <span className="font-bold text-emerald-700">₹{Number(confirmedDonation.amount).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Status:</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                      CONFIRMED (LOCKED)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Link
-                    href={`/donor/donations/${confirmedDonation.id}`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors"
-                  >
-                    View Donation Receipt
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                <div className="pt-2">
                   <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    type="submit"
+                    disabled={loading || !amount || amount <= 0}
+                    className="w-full py-3 rounded-lg bg-[#00F59B] hover:bg-[#00F59B]/90 text-black font-semibold text-xs font-mono transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    Done
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Confirming Escrow Lock...</span>
+                      </>
+                    ) : (
+                      <span>Confirm {formatRupees(amount || 0)} Contribution</span>
+                    )}
                   </button>
                 </div>
-              </div>
+              </form>
             )}
           </div>
         </div>
@@ -271,3 +259,5 @@ export const DonationModal: React.FC<DonationModalProps> = ({
     </>
   );
 };
+
+export default DonationModal;

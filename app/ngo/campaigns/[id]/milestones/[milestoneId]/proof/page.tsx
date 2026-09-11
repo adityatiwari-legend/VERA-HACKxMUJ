@@ -31,15 +31,16 @@ export default async function SubmitProofPage({ params }: PageProps) {
   // Authorization: Only owning NGO or Admin
   if (user.role === 'NGO' && campaign.ngo_id !== user.id) {
     return (
-      <div className="max-w-2xl mx-auto py-12 text-center">
-        <div className="p-8 bg-white rounded-2xl border border-rose-200 shadow-sm">
-          <h2 className="text-xl font-bold text-rose-700">Access Denied</h2>
-          <p className="text-sm text-slate-600 mt-2">
+      <div className="max-w-2xl mx-auto py-16 text-center">
+        <div className="p-8 bg-[#0E0E12] rounded-3xl border border-red-500/20 shadow-2xl">
+          <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <h2 className="text-xl font-bold text-red-400">Access Denied</h2>
+          <p className="text-xs text-zinc-400 mt-2">
             You can only submit milestone proofs for your own campaigns.
           </p>
           <Link
             href="/ngo/campaigns"
-            className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold"
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-semibold uppercase tracking-wider"
           >
             Return to Dashboard
           </Link>
@@ -83,59 +84,59 @@ export default async function SubmitProofPage({ params }: PageProps) {
       {/* Breadcrumb / Back Link */}
       <Link
         href={`/ngo/campaigns/${campaign.id}`}
-        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-[#00F59B] transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Campaign
       </Link>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="bg-[#0E0E12] rounded-3xl border border-white/5 p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5">
           <div>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">
+            <span className="text-[10px] font-mono font-bold text-[#00F59B] uppercase tracking-wider block">
               Phase 3 — Evidence Submission
             </span>
-            <h1 className="text-xl font-bold text-slate-900 mt-0.5">
+            <h1 className="text-2xl font-bold text-white tracking-tight mt-1">
               Submit Milestone Proof
             </h1>
           </div>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+          <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold ${
             milestone.status === 'REJECTED'
-              ? 'bg-rose-100 text-rose-800 border border-rose-200'
-              : 'bg-amber-100 text-amber-800 border border-amber-200'
+              ? 'bg-red-500/10 text-red-400 border border-red-500/30'
+              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
           }`}>
             {milestone.status === 'REJECTED' ? 'CORRECTION REQUIRED' : milestone.status}
           </span>
         </div>
 
         {/* Milestone Meta */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-xs">
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Milestone</span>
-            <span className="text-slate-900 font-bold block mt-0.5">{milestone.title}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 text-xs">
+          <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+            <span className="text-zinc-500 block text-[10px] font-mono uppercase tracking-wider">Milestone</span>
+            <span className="text-white font-bold block mt-1">{milestone.title}</span>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Allocated Budget</span>
-            <span className="text-emerald-700 font-bold block mt-0.5">{formatRupees(Number(milestone.amount))}</span>
+          <div className="p-4 bg-[#00F59B]/5 rounded-2xl border border-[#00F59B]/20">
+            <span className="text-[#00F59B] block text-[10px] font-mono uppercase tracking-wider">Allocated Budget</span>
+            <span className="text-[#00F59B] font-mono font-bold block mt-1">{formatRupees(Number(milestone.amount))}</span>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Campaign</span>
-            <span className="text-slate-900 font-medium block mt-0.5 truncate">{campaign.title}</span>
+          <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+            <span className="text-zinc-500 block text-[10px] font-mono uppercase tracking-wider">Campaign</span>
+            <span className="text-zinc-300 font-medium block mt-1 truncate">{campaign.title}</span>
           </div>
         </div>
 
         {/* Rejection notice if resubmitting */}
         {milestone.status === 'REJECTED' && previousProofs.length > 0 && previousProofs[0].rejection_reason && (
-          <div className="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-rose-800">
-              <ShieldAlert className="w-4 h-4 text-rose-600" />
+          <div className="mt-6 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-red-400">
+              <ShieldAlert className="w-4 h-4 text-red-400" />
               Previous Submission Rejected by Auditor:
             </div>
-            <p className="text-rose-700 pl-5">
+            <p className="text-red-300/90 pl-6 font-mono text-[11px]">
               "{previousProofs[0].rejection_reason}"
             </p>
-            <p className="text-[11px] text-rose-600 pl-5 pt-1">
+            <p className="text-[11px] text-zinc-400 pl-6 pt-1">
               Please upload corrected invoices/receipts and resubmit for verification.
             </p>
           </div>
@@ -143,14 +144,14 @@ export default async function SubmitProofPage({ params }: PageProps) {
       </div>
 
       {!isEligible ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-3">
-          <h3 className="text-sm font-bold text-amber-900">Proof Submission Unavailable</h3>
-          <p className="text-xs text-amber-700 max-w-md mx-auto">
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-8 text-center space-y-4">
+          <h3 className="text-base font-bold text-amber-300">Proof Submission Unavailable</h3>
+          <p className="text-xs text-amber-200/80 max-w-md mx-auto leading-relaxed">
             This milestone is currently in <strong>{milestone.status}</strong> status. Proof can only be submitted when the milestone is IN_PROGRESS or REJECTED.
           </p>
           <Link
             href={`/ngo/campaigns/${campaign.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-800 text-white text-xs font-semibold"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold uppercase tracking-wider"
           >
             Back to Campaign
           </Link>

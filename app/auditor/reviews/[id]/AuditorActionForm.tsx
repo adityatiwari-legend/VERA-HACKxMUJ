@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProofStatus } from '@/types';
-import { CheckCircle2, XCircle, AlertCircle, Loader2, MessageSquare } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Loader2, MessageSquare, RotateCcw } from 'lucide-react';
 
 interface AuditorActionFormProps {
   proofId: string;
@@ -24,7 +24,7 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
   const isClosed = currentStatus === 'APPROVED' || currentStatus === 'REJECTED';
 
   const handleApprove = async () => {
-    if (!confirm('Are you sure you want to APPROVE this proof evidence? Note: In Phase 3, this approves evidence but does NOT release money.')) {
+    if (!confirm('Are you sure you want to APPROVE this proof evidence? Note: In Phase 3, this verifies evidence integrity. Fund release occurs via 2-of-3 multisig.')) {
       return;
     }
 
@@ -44,7 +44,7 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
         throw new Error(data.error || 'Failed to approve proof.');
       }
 
-      setSuccessMessage('Proof evidence successfully APPROVED. (Funds remain locked until Phase 4 release)');
+      setSuccessMessage('Proof evidence successfully APPROVED. Milestone status updated for multisig consensus.');
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred during approval.');
@@ -53,13 +53,13 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
     }
   };
 
-  const handleReject = async () => {
+  const handleRequestResubmission = async () => {
     if (!comment || comment.trim().length === 0) {
-      setError('A rejection reason/comment is required so the NGO can submit corrected evidence.');
+      setError('Please provide feedback explaining what needs to be corrected for resubmission.');
       return;
     }
 
-    if (!confirm('Reject this proof evidence? The NGO will be notified to submit corrected documentation.')) {
+    if (!confirm('Request evidence resubmission from the NGO?')) {
       return;
     }
 
@@ -71,7 +71,42 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
       const res = await fetch(`/api/proofs/${proofId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment: comment.trim() }),
+        body: JSON.stringify({ comment: `[Resubmission Requested] ${comment.trim()}` }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to request resubmission.');
+      }
+
+      setSuccessMessage('Resubmission requested. NGO has been notified to provide corrected evidence.');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'An error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!comment || comment.trim().length === 0) {
+      setError('A rejection reason/comment is required so the NGO can review audit findings.');
+      return;
+    }
+
+    if (!confirm('Reject this proof evidence? This will be permanently recorded in the immutable audit log.')) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const res = await fetch(`/api/proofs/${proofId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: `[Rejected] ${comment.trim()}` }),
       });
 
       const data = await res.json();
@@ -79,7 +114,7 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
         throw new Error(data.error || 'Failed to reject proof.');
       }
 
-      setSuccessMessage('Proof evidence REJECTED. NGO milestone status updated to REJECTED for correction.');
+      setSuccessMessage('Proof evidence REJECTED. NGO milestone status updated to REJECTED.');
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred during rejection.');
@@ -90,101 +125,117 @@ export const AuditorActionForm: React.FC<AuditorActionFormProps> = ({
 
   if (isClosed) {
     return (
-      <div className={`p-5 rounded-2xl border ${
-        currentStatus === 'APPROVED'
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-          : 'bg-rose-50 border-rose-200 text-rose-900'
-      }`}>
+      <div
+        className={`p-5 rounded-xl border ${
+          currentStatus === 'APPROVED'
+            ? 'bg-[#00F59B]/5 border-[#00F59B]/20 text-[#00F59B]'
+            : 'bg-red-500/5 border-red-500/20 text-red-400'
+        }`}
+      >
         <div className="flex items-center gap-2 font-bold text-sm">
           {currentStatus === 'APPROVED' ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-[#00F59B]" />
           ) : (
-            <XCircle className="w-5 h-5 text-rose-600" />
+            <XCircle className="w-4 h-4 text-red-400" />
           )}
-          Auditor Decision Recorded: {currentStatus}
+          <span>Auditor Decision Recorded: {currentStatus}</span>
         </div>
-        <p className="text-xs mt-1 opacity-80">
-          This evidence submission has been officially resolved. {currentStatus === 'APPROVED' ? 'Evidence is verified.' : 'Returned to NGO for correction.'}
+        <p className="text-xs mt-1 text-zinc-400">
+          This evidence submission has been officially resolved. {currentStatus === 'APPROVED' ? 'Evidence is cryptographically verified.' : 'Returned to NGO for corrective action.'}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5">
-      <div className="border-b border-slate-100 pb-4">
-        <h3 className="text-base font-bold text-slate-900">Auditor Formal Decision</h3>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Submit your binding audit verification. Rejecting requires a clear justification for NGO correction.
+    <div className="bg-[#111113] rounded-xl border border-zinc-800 p-6 sm:p-8 shadow-sm space-y-5">
+      <div className="border-b border-zinc-800/80 pb-3">
+        <h3 className="text-sm font-semibold text-white tracking-tight">Auditor Formal Determination</h3>
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Submit your binding audit verification. Rejection or resubmission requests require clear justification.
         </p>
       </div>
 
       {error && (
-        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-800">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2.5 text-xs text-red-400">
+          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2.5 text-xs text-emerald-800">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-lg bg-[#00F59B]/10 border border-[#00F59B]/20 flex items-start gap-2.5 text-xs text-[#00F59B]">
+          <CheckCircle2 className="w-4 h-4 text-[#00F59B] shrink-0 mt-0.5" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {/* Comment / Justification Box */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-          <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-          Auditor Comments & Findings
+        <label className="text-[11px] font-mono uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5 text-zinc-500" />
+          Auditor Findings & Notes
         </label>
         <textarea
           rows={3}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Enter audit notes or specific rejection reason (e.g. Invoice amount differs from claimed utilisation. Please submit corrected documentation.)"
+          placeholder="Enter audit notes or specific findings (e.g., Extracted invoice amount ₹1,80,000 matches claimed amount. Tax invoice serial verified.)"
           disabled={isSubmitting}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-zinc-700/80 text-white text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#00F59B] transition-colors"
         />
-        <p className="text-[11px] text-slate-400">
-          Mandatory if rejecting. Recorded in permanent audit log.
+        <p className="text-[11px] font-mono text-zinc-500">
+          Mandatory for rejection or resubmission. Recorded permanently in append-only audit trail.
         </p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+      {/* Action Buttons: 3 actions matching Requirement 17 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
         <button
           type="button"
           onClick={handleApprove}
           disabled={isSubmitting}
-          className="w-full sm:flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="py-2.5 px-4 rounded-lg bg-[#00F59B] hover:bg-[#00F59B]/90 text-black font-semibold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           {isSubmitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-black" />
           ) : (
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4 text-black" />
           )}
           <span>Approve Evidence</span>
         </button>
 
         <button
           type="button"
-          onClick={handleReject}
+          onClick={handleRequestResubmission}
           disabled={isSubmitting}
-          className="w-full sm:flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="py-2.5 px-4 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           {isSubmitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
           ) : (
-            <XCircle className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 text-amber-400" />
           )}
-          <span>Reject (Require Correction)</span>
+          <span>Request Resubmission</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleReject}
+          disabled={isSubmitting}
+          className="py-2.5 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-4 h-4 animate-spin text-red-400" />
+          ) : (
+            <XCircle className="w-4 h-4 text-red-400" />
+          )}
+          <span>Reject Evidence</span>
         </button>
       </div>
 
-      <p className="text-[10px] text-slate-400 text-center italic">
-        Phase 3 Notice: Approving evidence updates milestone status to APPROVED but strictly does not release money. Fund release belongs to Phase 4.
+      <p className="text-[11px] font-mono text-zinc-500 text-center">
+        Escrow invariant: Approving evidence updates verification state. Fund release strictly requires 2-of-3 multisig consensus.
       </p>
     </div>
   );

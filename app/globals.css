@@ -3,31 +3,234 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-rgb: 248, 250, 252;
+  color-scheme: dark !important;
+  --background: #09090b;
+  --foreground: #ededed;
+  --primary: #00f59b;
+  --secondary: #38bdf8;
+  --muted: #141418;
+  --muted-foreground: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.1);
+  --destructive: #ef4444;
+  --canvas-subtle: #0c0c0e;
+  --surface: #121215;
+  --surface-hover: #17171c;
+  --surface-elevated: #1a1a20;
+  --border-hairline: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --mint: #00f59b;
+  --mint-glow: rgba(0, 245, 155, 0.25);
+  --mint-subtle: rgba(0, 245, 155, 0.1);
+  --crimson: #ef4444;
+  --crimson-subtle: rgba(239, 68, 68, 0.1);
+  --zinc-muted: #71717a;
+  --zinc-dim: #a1a1aa;
+
+  /* === VERA Design System Tokens (component.md §3) === */
+  --surface-base: #0B0F19;
+  --surface-card-dark: rgba(15, 23, 42, 0.75);
+  --surface-card-light: #FFFFFF;
+  --brand-emerald-500: #10B981;
+  --brand-emerald-glow: rgba(16, 185, 129, 0.25);
+  --cyber-cyan-500: #06B6D4;
+  --cyber-cyan-glow: rgba(6, 182, 212, 0.25);
+  --trust-indigo-500: #6366F1;
+  --trust-indigo-glow: rgba(99, 102, 241, 0.25);
+  --alert-amber-500: #F59E0B;
+  --danger-rose-500: #F43F5E;
+  --border-subtle-dark: rgba(255, 255, 255, 0.08);
+  --border-subtle-light: rgba(226, 232, 240, 0.8);
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  color-scheme: dark !important;
+  background-color: #09090b !important;
+  color: #ededed !important;
+  overflow-x: hidden;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Custom subtle scrollbar */
+::selection {
+  background: #00f59b;
+  color: #09090b;
+}
+
+/* Precision Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #09090b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #00f59b;
+}
+
+/* Subtle Technical Grid Background */
+.bg-grid-technical {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.bg-grid-dense {
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Hairline borders */
+.border-hairline {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.border-b-hairline {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.border-t-hairline {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.border-r-hairline {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.border-l-hairline {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Crosshair registration marks */
+.crosshair-corner {
+  position: relative;
+}
+.crosshair-corner::before {
+  content: "+";
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Glowing mint indicator pulse */
+@keyframes mintPulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(0, 245, 155, 0.6);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 6px rgba(0, 245, 155, 0);
+  }
+}
+
+.animate-mint-pulse {
+  animation: mintPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Horizontal ticker animation */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker 35s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* ==========================================
+   VERA Design System — Glassmorphism & Glows
+   (component.md §3.3)
+   ========================================== */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 24px -4px rgba(16, 185, 129, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 24px -4px rgba(6, 182, 212, 0.3);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.3);
+}
+
+.glow-amber {
+  box-shadow: 0 0 24px -4px rgba(245, 158, 11, 0.3);
+}
+
+.glow-rose {
+  box-shadow: 0 0 24px -4px rgba(244, 63, 94, 0.3);
+}
+
+/* VERA: shimmer for skeleton loaders */
+@keyframes vera-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.vera-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 200% 100%;
+  animation: vera-shimmer 1.6s ease-in-out infinite;
+}
+
+/* VERA: ambient mesh for dark heroes */
+.vera-ambient-mesh {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(6, 182, 212, 0.10), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(99, 102, 241, 0.10), transparent 50%);
+}
+
+/* VERA: pipeline pulse for journey trace */
+@keyframes vera-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+.animate-vera-node-pulse {
+  animation: vera-node-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

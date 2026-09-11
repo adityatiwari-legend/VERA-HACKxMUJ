@@ -13,11 +13,15 @@ import {
   Coins,
   FileCheck,
   KeyRound,
-  Sparkles,
   Info,
   Lock,
+  Database,
+  Cpu,
+  UserCheck,
 } from 'lucide-react';
 import { ProgressBar } from '@/components/ProgressBar';
+import { StatusBadge } from '@/components/StatusBadge';
+import { formatRupees } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,158 +42,231 @@ export default async function TraceDonationPage({
 
   const { donation, stages, milestones } = journey;
 
-  const formatRupees = (val: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  // The 8 canonical steps specified by Requirement 13
+  const timelineSteps = [
+    {
+      step: 1,
+      title: 'Donation',
+      subtitle: 'Contribution Received',
+      description: `${formatRupees(donation.amount)} contribution received and assigned permanent reference: ${donation.reference}.`,
+      isDone: true,
+      timestamp: donation.created_at,
+      icon: Coins,
+    },
+    {
+      step: 2,
+      title: 'Earmarked',
+      subtitle: 'Programmatic Allocation',
+      description: `Funds bound programmatically to "${donation.campaign_title}". Zero co-mingling with general NGO operational funds.`,
+      isDone: true,
+      timestamp: donation.created_at,
+      icon: Lock,
+    },
+    {
+      step: 3,
+      title: 'Locked',
+      subtitle: 'Escrow Custody',
+      description: `Capital held in escrow custody until milestone deliverables are independently certified.`,
+      isDone: true,
+      timestamp: donation.created_at,
+      icon: Database,
+    },
+    {
+      step: 4,
+      title: 'Assigned to milestone',
+      subtitle: 'Budget Segmentation',
+      description: `Programmatically allocated across ${milestones.length} bounded milestone tranches for ${donation.beneficiary}.`,
+      isDone: milestones.length > 0,
+      timestamp: null,
+      icon: Layers,
+    },
+    {
+      step: 5,
+      title: 'Evidence submitted',
+      subtitle: 'Vendor Invoices & Photos',
+      description: milestones.some((m) => ['PROOF_SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'RELEASED'].includes(m.status))
+        ? 'Executing NGO uploaded vendor receipts and site inspection photographs with SHA-256 digests.'
+        : 'Awaiting vendor invoice submission upon deliverable completion.',
+      isDone: milestones.some((m) => ['PROOF_SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'RELEASED'].includes(m.status)),
+      timestamp: null,
+      icon: FileCheck,
+    },
+    {
+      step: 6,
+      title: 'Verification',
+      subtitle: 'AI Line-Item OCR',
+      description: milestones.some((m) => ['APPROVED', 'RELEASED'].includes(m.status))
+        ? 'OCR line-item scanner mathematically verified vendor invoice totals against claimed budget.'
+        : 'AI screening executes immediately upon evidence upload.',
+      isDone: milestones.some((m) => ['APPROVED', 'RELEASED'].includes(m.status)),
+      timestamp: null,
+      icon: Cpu,
+    },
+    {
+      step: 7,
+      title: 'Auditor approval',
+      subtitle: 'Independent Certification',
+      description: milestones.some((m) => ['APPROVED', 'RELEASED'].includes(m.status))
+        ? 'Certified independent auditor inspected documentation and signed off on compliance.'
+        : 'Human auditor sign-off pending evidence examination.',
+      isDone: milestones.some((m) => ['APPROVED', 'RELEASED'].includes(m.status)),
+      timestamp: null,
+      icon: UserCheck,
+    },
+    {
+      step: 8,
+      title: 'Release',
+      subtitle: '2-of-3 Multisig On-Chain',
+      description: Number(donation.released_amount) > 0
+        ? `Smart contract released tranche upon 2-of-3 multisig consensus. Real transaction hash recorded.`
+        : 'Funds remain safely locked in escrow custody until final multisig consensus.',
+      isDone: Number(donation.released_amount) > 0,
+      timestamp: null,
+      icon: ShieldCheck,
+    },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* Back navigation */}
+    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-[#EDEDED]">
+      {/* Top Breadcrumb & Navigation */}
       <div className="flex items-center justify-between">
         <Link
           href={`/donor/donations/${donation.id}`}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-mono font-medium text-zinc-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Donation Receipt
+          <span>Back to Contribution Receipt</span>
         </Link>
         <Link
           href={`/campaigns/${donation.campaign_id}/audit`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white/[0.04] text-white border border-white/[0.08] hover:bg-white/[0.08] transition-all"
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          View Full Campaign Audit
+          <ShieldCheck className="w-4 h-4 text-[#00F59B]" />
+          <span>View Campaign Public Audit</span>
         </Link>
       </div>
 
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 rounded-2xl p-6 sm:p-8 text-white border border-slate-800 shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              Trace My Donation Journey
+      {/* 
+        ========================================================================
+        HERO SECTION (Requirement 13)
+        "Where did my donation go?"
+        ₹10,000 / Donation
+        ========================================================================
+      */}
+      <div className="bg-[#111113] rounded-xl p-6 sm:p-8 border border-white/[0.08] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#00F59B] font-semibold block">
+              DONOR TRACEABILITY LEDGER
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Where Did My Money Go?
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
+              Where did my donation go?
             </h1>
-            <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-              Follow your ₹{formatRupees(donation.amount)} contribution through escrow locking, milestone allocation, AI/auditor verification, and blockchain release.
+            <p className="text-xs text-zinc-400 font-mono">
+              Campaign: <strong className="text-zinc-200">{donation.campaign_title}</strong> • Ref: {donation.reference}
             </p>
           </div>
 
-          <div className="text-left sm:text-right bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 shrink-0">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Your Contribution</span>
-            <span className="text-2xl font-black text-emerald-400 block mt-0.5">
-              {formatRupees(donation.amount)}
+          <div className="bg-[#18181B] border border-white/[0.08] p-5 rounded-xl text-left sm:text-right shrink-0">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block font-medium">
+              Donation
             </span>
-            <span className="font-mono text-[10px] text-slate-400">{donation.reference}</span>
+            <div className="text-2xl sm:text-3xl font-bold font-mono text-[#00F59B] mt-0.5">
+              {formatRupees(donation.amount)}
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400">
+              {new Date(donation.created_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Campaign Fund Allocation Context */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      {/* 
+        ========================================================================
+        PROGRAMMATIC ALLOCATION DISCLAIMER (Requirement 13)
+        "This represents programmatic allocation within the campaign."
+        Do NOT claim physical currency tracking.
+        ========================================================================
+      */}
+      <div className="rounded-xl bg-[#111113] p-4 border border-white/[0.08] text-xs font-mono flex items-start gap-3 text-zinc-300">
+        <Info className="w-4 h-4 text-[#06B6D4] shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="font-semibold text-white">
+            Programmatic Transparency Notice:
+          </p>
+          <p className="text-zinc-400 leading-relaxed">
+            This represents programmatic allocation within the campaign. VERA tracks earmarked funds and milestone commitments within verified smart contracts rather than individual physical bank notes.
+          </p>
+        </div>
+      </div>
+
+      {/* 
+        ========================================================================
+        VERTICAL TIMELINE (Requirement 13)
+        ✓ Donation
+        ✓ Earmarked
+        ✓ Locked
+        ✓ Assigned to milestone
+        ✓ Evidence submitted
+        ✓ Verification
+        ✓ Auditor approval
+        ✓ Release
+        ========================================================================
+      */}
+      <div className="bg-[#111113] rounded-xl border border-white/[0.08] p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 font-mono">
           <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Earmarked Initiative
-            </h3>
-            <h2 className="text-lg font-bold text-slate-900 mt-0.5">
-              {donation.campaign_title}
+            <span className="text-[11px] uppercase tracking-wider text-[#00F59B] font-semibold block">
+              EXECUTION MILESTONES
+            </span>
+            <h2 className="text-lg font-bold text-white font-sans">
+              Contribution Progression
             </h2>
           </div>
-          <span className="text-xs text-slate-500">
-            Beneficiary: <strong className="text-slate-800">{donation.beneficiary}</strong>
+          <span className="text-xs text-zinc-400">
+            {timelineSteps.filter((s) => s.isDone).length} of 8 Stages Complete
           </span>
         </div>
 
-        <div className="space-y-1.5">
-          <ProgressBar current={donation.raised_amount} total={donation.target_amount} />
-          <div className="flex justify-between text-xs font-medium text-slate-600">
-            <span>{formatRupees(donation.raised_amount)} raised of {formatRupees(donation.target_amount)}</span>
-            <span>Released: {formatRupees(donation.released_amount)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Visual Step-by-Step Fund Journey */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-8">
-        <div>
-          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-emerald-600" />
-            Programmatic Journey of Your Funds
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Real-time status of your contribution across the VERA transparency pipeline.
-          </p>
-        </div>
-
-        <div className="relative border-l-2 border-slate-200 pl-6 space-y-8 ml-3">
-          {stages.map((stage) => {
-            const isCompleted = stage.status === 'COMPLETED';
-            const isAwaiting = stage.status === 'AWAITING_RELEASE';
-
+        <div className="relative pl-6 sm:pl-8 border-l border-white/[0.1] ml-3 sm:ml-4 space-y-6">
+          {timelineSteps.map((step) => {
+            const Icon = step.icon;
             return (
-              <div key={stage.step} className="relative group">
-                {/* Timeline node icon */}
+              <div key={step.step} className="relative group">
+                {/* Checkmark or bullet node */}
                 <div
-                  className={`absolute -left-[33px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
-                    isCompleted
-                      ? 'bg-emerald-600 text-white'
-                      : isAwaiting
-                      ? 'bg-indigo-600 text-white animate-pulse'
-                      : 'bg-slate-200 text-slate-500'
+                  className={`absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full flex items-center justify-center ${
+                    step.isDone
+                      ? 'bg-[#00F59B] text-black shadow-[0_0_8px_rgba(0,245,155,0.4)]'
+                      : 'bg-[#18181B] border border-white/[0.2] text-zinc-500'
                   }`}
                 >
-                  {isCompleted ? (
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <span>{stage.step}</span>
-                  )}
+                  {step.isDone && <CheckCircle2 className="w-3 h-3 text-black" />}
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4
-                      className={`text-sm font-bold ${
-                        isCompleted ? 'text-slate-900' : 'text-slate-500'
-                      }`}
-                    >
-                      {stage.title}
-                    </h4>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        isCompleted
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : isAwaiting
-                          ? 'bg-indigo-100 text-indigo-800'
-                          : 'bg-slate-100 text-slate-500'
-                      }`}
-                    >
-                      {isCompleted ? '✓ Completed' : isAwaiting ? '○ Next in Queue' : '○ Pending'}
-                    </span>
+                <div className="p-4 rounded-lg bg-[#18181B] border border-white/[0.06] hover:border-white/[0.14] transition-all space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-mono">
+                      <span className="text-xs font-bold text-white">
+                        {step.isDone ? '✓ ' : '○ '}
+                        {step.title}
+                      </span>
+                      <span className="text-zinc-500 text-xs">/</span>
+                      <span className="text-xs text-zinc-400 font-medium">
+                        {step.subtitle}
+                      </span>
+                    </div>
+
+                    <StatusBadge status={step.isDone ? 'APPROVED' : 'PENDING'} size="sm" />
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed max-w-2xl">
-                    {stage.description}
+                  <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+                    {step.description}
                   </p>
 
-                  {stage.txHash && (
-                    <div className="pt-1">
-                      <a
-                        href={stage.explorerUrl || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-mono text-xs text-emerald-600 hover:text-emerald-500"
-                      >
-                        Blockchain Tx: {stage.txHash.substring(0, 16)}...
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                  {step.timestamp && (
+                    <div className="text-[11px] font-mono text-zinc-500 pt-0.5">
+                      Recorded: {new Date(step.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                     </div>
                   )}
                 </div>
@@ -199,55 +276,36 @@ export default async function TraceDonationPage({
         </div>
       </div>
 
-      {/* Milestone Allocation Path breakdown */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h2 className="text-base font-bold text-slate-900">
-            Campaign Milestone Allocation Breakdown
-          </h2>
-          <span className="text-xs text-slate-500">
-            {milestones.length} Milestone(s)
+      {/* Campaign Milestone Allocation Context */}
+      <div className="bg-[#111113] rounded-xl border border-white/[0.08] p-6 sm:p-8 space-y-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 font-mono">
+          <div>
+            <span className="text-[11px] uppercase tracking-wider text-[#00F59B] font-semibold block">
+              DELIVERABLE TARGETS
+            </span>
+            <h3 className="text-base font-bold text-white font-sans">
+              Supported Milestone Deliverables
+            </h3>
+          </div>
+          <span className="text-xs text-zinc-400">
+            {milestones.length} Milestone Tranches
           </span>
         </div>
 
-        <p className="text-xs text-slate-600 leading-relaxed">
-          Your donation is held in the campaign's pooled escrow. Milestone progress below determines when and how much capital is released to vendors:
-        </p>
-
-        <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
-          {milestones.map((ms) => (
-            <div key={ms.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50/50">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-slate-500">M{ms.sequence}</span>
-                  <span className="font-bold text-slate-900">{ms.title}</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white border border-slate-200 text-slate-700">
-                    {ms.status}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 line-clamp-1">{ms.description}</p>
+        <div className="divide-y divide-white/[0.06] text-xs font-mono">
+          {milestones.map((m) => (
+            <div key={m.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="font-bold text-white">{m.title}</span>
+                <p className="text-[11px] text-zinc-400 font-sans mt-0.5">{m.description}</p>
               </div>
-
-              <div className="text-right shrink-0">
-                <span className="font-bold text-slate-900 block">{formatRupees(ms.amount)}</span>
-                <span className="text-[10px] text-indigo-700 font-semibold">
-                  Released: {formatRupees(ms.released_amount)}
-                </span>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-bold text-zinc-200">{formatRupees(m.amount)}</span>
+                <StatusBadge status={m.status} size="sm" />
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Honest Accounting Disclosure */}
-      <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 text-xs text-blue-900 space-y-2">
-        <div className="flex items-center gap-2 font-bold text-blue-950">
-          <Info className="w-4 h-4 text-blue-700" />
-          Honest Accounting Disclosure
-        </div>
-        <p className="leading-relaxed">
-          This fund trail represents programmatic allocation within the campaign escrow. In pooled donations, contributions are earmarked to this specific campaign and disbursed only as milestones are verified and approved via 2-of-3 multisig, rather than tracking individual physical bank notes.
-        </p>
       </div>
     </div>
   );

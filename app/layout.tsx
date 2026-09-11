@@ -1,10 +1,41 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { Navbar } from '@/components/Navbar';
+import { LayoutShell } from '@/components/LayoutShell';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+export const viewport: Viewport = {
+  themeColor: '#09090b',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
-  title: 'VERA — Transparent Donation & Milestone Auditing',
-  description: 'A donation trail donors can audit from release to beneficiary spend.',
+  title: 'VERA — Programmable Trust Layer | Audited Milestone Escrows',
+  description:
+    'Every rupee traceable. Audited before it moves. VERA binds capital to verified physical progress with tamper-evident escrows and public audit trails.',
+  keywords: [
+    'trust layer',
+    'milestone escrow',
+    'audit ledger',
+    'cryptographic proof',
+    'donation transparency',
+    'SHA-256 evidence',
+    'AI OCR verification',
+  ],
+  authors: [{ name: 'VERA Core Architecture' }],
 };
 
 export default function RootLayout({
@@ -13,17 +44,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased font-sans">
-        <Navbar />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
-        <footer className="border-t border-slate-200 bg-white py-6">
-          <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            VERA Platform • Phase 2: Donation & Fund Lifecycle • Verifiable Evidence & Real Auditing
-          </div>
-        </footer>
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrainsMono.variable} dark h-full antialiased bg-[#09090B] text-[#EDEDED] font-sans selection:bg-[#00F59B] selection:text-[#09090B]`}
+      data-theme="dark"
+      style={{ colorScheme: 'dark' }}
+    >
+      <body className="min-h-full flex flex-col bg-[#09090b] text-[#ededed] relative">
+        <LayoutShell>
+          <main className="flex-1 w-full">
+            {children}
+          </main>
+        </LayoutShell>
       </body>
     </html>
   );

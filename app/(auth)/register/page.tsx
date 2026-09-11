@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, UserPlus, AlertCircle } from 'lucide-react';
+import { ShieldCheck, UserPlus, AlertCircle, Loader2 } from 'lucide-react';
 import { UserRole } from '@/types';
 
 export default function RegisterPage() {
@@ -43,38 +43,38 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-12 px-4">
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-            <ShieldCheck className="w-6 h-6" />
+    <div className="max-w-md mx-auto py-16 px-4">
+      <div className="bg-[#111113] rounded-xl border border-zinc-800 p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="text-center space-y-1.5">
+          <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 text-[#00F59B] flex items-center justify-center mx-auto mb-2">
+            <ShieldCheck className="w-5 h-5" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Join VERA</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-xl font-bold text-white tracking-tight">Join VERA</h1>
+          <p className="text-xs text-zinc-400">
             Register as a donor or NGO to engage in auditable philanthropy
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400">
               Account Role
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setRole('NGO')}
-                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-all ${
+                className={`py-2 px-3 rounded-lg border text-xs font-mono font-semibold transition-all ${
                   role === 'NGO'
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-600/20'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-[#00F59B] bg-[#00F59B]/10 text-[#00F59B]'
+                    : 'border-zinc-700 bg-[#18181B] text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 NGO / Charity
@@ -82,10 +82,10 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setRole('DONOR')}
-                className={`py-2 px-3 rounded-xl border text-sm font-medium transition-all ${
+                className={`py-2 px-3 rounded-lg border text-xs font-mono font-semibold transition-all ${
                   role === 'DONOR'
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-600/20'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-[#00F59B] bg-[#00F59B]/10 text-[#00F59B]'
+                    : 'border-zinc-700 bg-[#18181B] text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 Donor
@@ -93,8 +93,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400">
               {role === 'NGO' ? 'NGO / Organization Name' : 'Full Name'}
             </label>
             <input
@@ -103,12 +103,12 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={role === 'NGO' ? 'e.g. Clean Earth Foundation' : 'e.g. Aarav Sharma'}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F59B] text-xs transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400">
               Email Address
             </label>
             <input
@@ -117,12 +117,12 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. contact@organization.org"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F59B] text-xs transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400">
               Password (min 6 characters)
             </label>
             <input
@@ -132,29 +132,29 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F59B] text-xs transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-sm transition-all disabled:opacity-50 mt-2"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#00F59B] hover:bg-[#00F59B]/90 text-black font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-2"
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin text-black" />
             ) : (
               <>
-                <UserPlus className="w-4 h-4" />
-                Complete Registration
+                <UserPlus className="w-4 h-4 text-black" />
+                <span>Complete Registration</span>
               </>
             )}
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
+        <p className="text-center text-xs text-zinc-400">
           Already registered?{' '}
-          <Link href="/login" className="font-semibold text-emerald-600 hover:text-emerald-500">
+          <Link href="/login" className="font-semibold text-[#00F59B] hover:underline">
             Sign In
           </Link>
         </p>

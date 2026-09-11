@@ -6,6 +6,8 @@ interface StatCardProps {
   subtext?: string;
   icon?: React.ReactNode;
   trend?: string;
+  accent?: 'default' | 'mint' | 'cyan' | 'indigo' | 'amber';
+  className?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -14,18 +16,56 @@ export const StatCard: React.FC<StatCardProps> = ({
   subtext,
   icon,
   trend,
+  accent = 'default',
+  className = '',
 }) => {
+  const getAccentClass = () => {
+    switch (accent) {
+      case 'mint':
+        return 'text-[#00F59B]';
+      case 'cyan':
+        return 'text-[#06B6D4]';
+      case 'indigo':
+        return 'text-[#6366F1]';
+      case 'amber':
+        return 'text-[#F59E0B]';
+      default:
+        return 'text-white';
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-600">{label}</p>
-        {icon && <div className="p-2 rounded-lg bg-slate-50 text-slate-600">{icon}</div>}
+    <div
+      className={`bg-[#111113] rounded-xl border border-white/[0.08] p-5 shadow-sm transition-all hover:border-white/[0.16] ${className}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1.5 min-w-0">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block font-medium">
+            {label}
+          </span>
+          <div className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight truncate ${getAccentClass()}`}>
+            {value}
+          </div>
+          {subtext && (
+            <p className="text-xs text-zinc-400 font-normal leading-relaxed pt-0.5">
+              {subtext}
+            </p>
+          )}
+        </div>
+        {icon && (
+          <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-zinc-300 shrink-0">
+            {icon}
+          </div>
+        )}
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <h3 className="text-2xl font-bold tracking-tight text-slate-900">{value}</h3>
-        {trend && <span className="text-xs font-semibold text-emerald-600">{trend}</span>}
-      </div>
-      {subtext && <p className="mt-1 text-xs text-slate-500">{subtext}</p>}
+
+      {trend && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center gap-1.5 text-xs font-mono text-[#00F59B]">
+          <span>{trend}</span>
+        </div>
+      )}
     </div>
   );
 };
+
+export default StatCard;

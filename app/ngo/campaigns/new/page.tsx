@@ -56,35 +56,35 @@ export default function NewCampaignPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 text-[#EDEDED] pb-16">
       <Link
         href="/ngo/campaigns"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Dashboard
+        <span>Back to NGO Dashboard</span>
       </Link>
 
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <div className="flex items-center gap-3 pb-6 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+      <div className="bg-[#111113] rounded-xl border border-white/[0.08] p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex items-center gap-3 pb-6 border-b border-white/[0.08]">
+          <div className="w-10 h-10 rounded-lg bg-[#00F59B]/10 border border-[#00F59B]/20 text-[#00F59B] flex items-center justify-center">
             <FolderPlus className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Create New Campaign</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Phase 1: Configure campaign metadata and target funding
+            <h1 className="text-xl font-bold text-white font-sans">Create New Campaign</h1>
+            <p className="text-xs text-zinc-400 font-mono mt-0.5">
+              Configure campaign deliverable metadata and financial target cap
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="my-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-            <div>
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
               <p className="font-semibold">{error}</p>
               {Object.keys(fieldErrors).length > 0 && (
-                <ul className="list-disc pl-5 mt-1 text-xs space-y-0.5">
+                <ul className="list-disc pl-5 mt-1 text-xs space-y-0.5 text-red-300">
                   {Object.entries(fieldErrors).map(([k, v]) => (
                     <li key={k}>{k}: {v.join(', ')}</li>
                   ))}
@@ -94,10 +94,10 @@ export default function NewCampaignPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-6">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Campaign Title *
+        <form onSubmit={handleSubmit} className="space-y-5 font-mono text-xs">
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+              Campaign Title <span className="text-[#00F59B]">*</span>
             </label>
             <input
               type="text"
@@ -107,19 +107,19 @@ export default function NewCampaignPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Solar Water Purification for 10 Rural Schools"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#00F59B] transition-colors"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              A concise, descriptive summary of the project.
+            <p className="text-[11px] text-zinc-500">
+              Concise, descriptive title identifying the initiative.
             </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Target Funding Goal (INR ₹) *
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+              Target Funding Goal (INR ₹) <span className="text-[#00F59B]">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-2.5 text-slate-400 text-sm font-semibold">₹</span>
+              <span className="absolute left-3.5 top-2.5 text-zinc-500 text-sm font-semibold">₹</span>
               <input
                 type="number"
                 required
@@ -128,17 +128,17 @@ export default function NewCampaignPage() {
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
                 placeholder="500000"
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium"
+                className="w-full pl-8 pr-4 py-2.5 rounded-lg bg-[#18181B] border border-white/[0.08] text-white text-sm font-semibold focus:outline-none focus:border-[#00F59B] transition-colors"
               />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Must be positive. Raised and released amounts will strictly initialize at ₹0.
+            <p className="text-[11px] text-zinc-500">
+              Must be positive. Raised and released balances strictly initialize at ₹0.
             </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Target Beneficiary *
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+              Target Beneficiary <span className="text-[#00F59B]">*</span>
             </label>
             <input
               type="text"
@@ -148,16 +148,16 @@ export default function NewCampaignPage() {
               value={beneficiary}
               onChange={(e) => setBeneficiary(e.target.value)}
               placeholder="e.g. 1,400 Primary School Students in Jaipur District"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#00F59B] transition-colors"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Who will receive the direct outcome of this expenditure.
+            <p className="text-[11px] text-zinc-500">
+              Who receives the physical deliverable or verified outcome.
             </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Detailed Description *
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
+              Detailed Description <span className="text-[#00F59B]">*</span>
             </label>
             <textarea
               required
@@ -167,22 +167,22 @@ export default function NewCampaignPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detail the scope of work, expected impact, procurement schedule, and intended milestones..."
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#18181B] border border-white/[0.08] text-white text-xs font-sans focus:outline-none focus:border-[#00F59B] transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-medium">
               Initial Campaign Status
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setStatus('DRAFT')}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
                   status === 'DRAFT'
-                    ? 'border-slate-800 bg-slate-900 text-white'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-white/[0.3] bg-white/[0.08] text-white'
+                    : 'border-white/[0.06] bg-[#18181B] text-zinc-400 hover:text-white'
                 }`}
               >
                 Save as Draft
@@ -190,10 +190,10 @@ export default function NewCampaignPage() {
               <button
                 type="button"
                 onClick={() => setStatus('ACTIVE')}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
                   status === 'ACTIVE'
-                    ? 'border-emerald-600 bg-emerald-600 text-white'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-[#00F59B]/40 bg-[#00F59B]/15 text-[#00F59B]'
+                    : 'border-white/[0.06] bg-[#18181B] text-zinc-400 hover:text-white'
                 }`}
               >
                 Publish as Active
@@ -201,24 +201,24 @@ export default function NewCampaignPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">
             <Link
               href="/ngo/campaigns"
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 rounded-lg border border-white/[0.08] text-zinc-400 text-xs hover:bg-white/[0.04] transition-colors"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#00F59B] hover:bg-[#00F59B]/90 text-black text-xs font-semibold transition-all disabled:opacity-50"
             >
               {submitting ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <FolderPlus className="w-4 h-4" />
-                  Create Campaign
+                  <span>Create Campaign</span>
                 </>
               )}
             </button>
