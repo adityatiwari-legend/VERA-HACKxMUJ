@@ -79,8 +79,14 @@ export default async function CampaignsExplorePage({
     ${orderClause}
   `;
 
-  const res = await query<Campaign>(sql, params);
-  const campaigns = res.rows;
+  let campaigns: any[] = [];
+  try {
+    const res = await query<Campaign>(sql, params);
+    campaigns = res.rows;
+  } catch (err: any) {
+    console.error('Failed to load campaigns:', err?.message || err);
+    campaigns = [];
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 py-8 pb-20 text-[#EDEDED]">
