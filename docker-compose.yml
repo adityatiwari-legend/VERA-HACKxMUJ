@@ -1,0 +1,40 @@
+services:
+  fundtrail-db:
+    image: postgres:16-alpine
+    container_name: fundtrail-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: fundtrail
+    ports:
+      # Mapped to host port 5433 to avoid collision with any existing host PostgreSQL on 5432
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fundtrail"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fundtrail-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fundtrail-app
+    restart: unless-stopped
+    depends_on:
+      fundtrail-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@fundtrail-db:5432/fundtrail
+      JWT_SECRET: fundtrail-super-secret-jwt-key-for-development-32chars!
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+    driver: local
