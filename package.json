@@ -17,7 +17,7 @@
     "test:phase5": "tsx scripts/test-phase5.ts",
     "test:tampering": "tsx scripts/test-tampering.ts",
     "test:contracts": "hardhat test",
-    "deploy:contract": "hardhat run scripts/deploy.ts"
+    "deploy:contract": "hardhat run scripts/deploy.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
